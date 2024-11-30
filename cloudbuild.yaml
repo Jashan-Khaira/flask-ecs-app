@@ -3,15 +3,15 @@ steps:
   - name: 'python:3.9-slim'
     entrypoint: pip
     args: ['install', '-r', 'requirements.txt', '--user']
-
+  
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA', '.']
-
+  
   # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA']
-
+  
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -26,8 +26,6 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars'
-      - 'PORT=5000'
 
 images:
   - 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA'
