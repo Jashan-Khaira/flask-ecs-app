@@ -4,11 +4,6 @@ steps:
     entrypoint: pip
     args: ['install', '-r', 'requirements.txt', '--user']
 
-  # Run tests (if you have any)
-  # - name: 'python:3.9-slim'
-  #   entrypoint: python
-  #   args: ['-m', 'pytest']
-
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA', '.']
@@ -32,7 +27,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - '--PORT=5000'
+      - 'PORT=5000'
 
 images:
   - 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA'
