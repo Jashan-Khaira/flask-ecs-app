@@ -21,7 +21,7 @@ phases:
       - echo "Pushing Docker image to Amazon ECR..."
       - docker push 061039764011.dkr.ecr.us-east-1.amazonaws.com/flask-ecs-app:latest
       - echo "Creating imagedefinitions.json..."
-      - printf '[{"name":"flask-ecs-app","imageUri":"061039764011.dkr.ecr.us-east-1.amazonaws.com/flask-ecs-app:latest"}]' > imagedefinitions.json
+      - printf '[{"name":"jashan-flask-container","imageUri":"061039764011.dkr.ecr.us-east-1.amazonaws.com/flask-ecs-app:latest"}]' > imagedefinitions.json
 
 artifacts:
   files:
