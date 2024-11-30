@@ -1,0 +1,36 @@
+steps:
+  # Install dependencies
+  - name: 'python:3.9-slim'
+    entrypoint: pip
+    args: ['install', '-r', 'requirements.txt', '--user']
+
+  # Run tests (if you have any)
+  # - name: 'python:3.9-slim'
+  #   entrypoint: python
+  #   args: ['-m', 'pytest']
+
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA', '.']
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'flask-app'
+      - '--image'
+      - 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA'
