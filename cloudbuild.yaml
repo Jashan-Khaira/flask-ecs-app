@@ -34,3 +34,6 @@ steps:
 
 images:
   - 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
