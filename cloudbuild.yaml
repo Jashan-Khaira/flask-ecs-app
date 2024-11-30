@@ -32,7 +32,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'PORT=5000'
+      - '--PORT=5000'
 
 images:
   - 'gcr.io/eng-oven-435418-i5/flask-app:$SHORT_SHA'
