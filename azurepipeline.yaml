@@ -3,15 +3,16 @@ trigger:
     include:
       - main  
 
+variables:
+  - group: AzureSecrets  # Reference the Azure variable group
+  - name: imageName
+    value: 'flask-microservice'
+
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  imageName: 'flask-microservice'
-  - group: AzureSecrets  # Reference the Azure variable group
-
 steps:
-- task: Checkout@1
+- checkout: self
   displayName: 'Checkout Code'
 
 - task: Docker@2
@@ -21,5 +22,5 @@ steps:
     containerRegistry: 'flask-docker-connection'  # Azure service connection for ACR
     repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'  
     dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-    tags: |
-      latest
+    tags: 
+      - latest
