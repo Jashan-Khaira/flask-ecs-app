@@ -14,6 +14,12 @@ variables:
     value: 'flaskappcontainerregistry'
   - name: resourceGroup
     value: 'jashan-flask-rg'
+  - name: sp_app_id
+    value: '$(sp_app_id)'
+  - name: sp_password
+    value: '$(sp_password)'
+  - name: sp_tenant
+    value: '$(sp_tenant)'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -29,10 +35,18 @@ stages:
             displayName: 'Checkout Repository'
             fetchDepth: 1
 
-          # Step to log in to Azure Container Registry
-          - script: |
-              az acr login --name $(registryName)
-            displayName: 'Login to ACR'
+          # Step to login to Azure using Service Principal
+          - task: AzureCLI@2
+            displayName: 'Azure CLI Login'
+            inputs:
+              azureSubscription: '945fce6d-95d4-4e5e-9105-7180e12eb891'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "Logging in to Azure..."
+                az login --service-principal -u $(sp_app_id) -p $(sp_password) --tenant $(sp_tenant)
+                echo "Logging in to ACR..."
+                az acr login --name $(registryName)
 
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
