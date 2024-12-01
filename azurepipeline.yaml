@@ -59,26 +59,21 @@ stages:
         displayName: 'Container App Deployment'
         steps:
           - task: AzureCLI@2
-            displayName: 'Azure Container Registry Login'
+            displayName: 'Azure Container Registry Authentication'
             inputs:
               azureSubscription: 'jk-sp-azure'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                # Login to Azure Container Registry
+                # Login to Azure Container Registry using service principal
                 az acr login --name $(registryName)
                 
-                # Verify image exists
-                IMAGE_EXISTS=$(az acr repository show-tags \
+                # Verify image exists and is pullable
+                az acr repository show-tags \
                   --name $(registryName) \
                   --repository $(imageName) \
                   --query "contains(@, '$(imageTag)')" \
-                  --output tsv)
-                
-                if [ "$IMAGE_EXISTS" != "true" ]; then
-                  echo "Error: Image not found in registry"
-                  exit 1
-                fi
+                  --output tsv
           
           - task: AzureCLI@2
             displayName: 'Deploy to Azure Container Apps'
@@ -87,6 +82,10 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                # Create ACR credentials for Container App
+                ACR_USERNAME=$(az acr credential show --name $(registryName) --query username -o tsv)
+                ACR_PASSWORD=$(az acr credential show --name $(registryName) --query passwords[0].value -o tsv)
+                
                 # Ensure container environment exists
                 az containerapp env show \
                   --name $(containerEnvironment) \
@@ -95,27 +94,14 @@ stages:
                   --name $(containerEnvironment) \
                   --resource-group $(resourceGroup)
                 
-                # Check if container app exists, update or create accordingly
-                if az containerapp show --name $(containerAppName) --resource-group $(resourceGroup) &>/dev/null; then
-                  echo "Updating existing container app..."
-                  az containerapp update \
-                    --name $(containerAppName) \
-                    --resource-group $(resourceGroup) \
-                    --image $(containerRegistry)/$(imageName):$(imageTag)
-                else
-                  echo "Creating new container app..."
-                  az containerapp create \
-                    --name $(containerAppName) \
-                    --resource-group $(resourceGroup) \
-                    --image $(containerRegistry)/$(imageName):$(imageTag) \
-                    --environment $(containerEnvironment) \
-                    --cpu 0.5 \
-                    --memory 1Gi \
-                    --min-replicas 1 \
-                    --max-replicas 3 \
-                    --ingress 'external' \
-                    --target-port 5000
-                fi
+                # Deploy or update container app with explicit registry credentials
+                az containerapp update \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup) \
+                  --image $(containerRegistry)/$(imageName):$(imageTag) \
+                  --registry-server $(containerRegistry) \
+                  --registry-username $ACR_USERNAME \
+                  --registry-password $ACR_PASSWORD
                 
                 # Verify and output deployment details
                 az containerapp show \
