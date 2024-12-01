@@ -28,6 +28,8 @@ stages:
         repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'  
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         tags: latest
+    continueOnError: false
+    enabled: true
 
 - stage: Deploy
   displayName: 'Deploy Stage'
