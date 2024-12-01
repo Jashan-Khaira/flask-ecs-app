@@ -14,12 +14,6 @@ variables:
     value: 'flaskappcontainerregistry'
   - name: resourceGroup
     value: 'jashan-flask-rg'
-  - name: sp_app_id
-    value: '$(SP_APP_ID)'
-  - name: sp_password
-    value: '$(SP_PASSWORD)'
-  - name: sp_tenant
-    value: '$(SP_TENANT)'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -39,12 +33,12 @@ stages:
           - task: AzureCLI@2
             displayName: 'Azure CLI Login'
             inputs:
-              azureSubscription: 'jk-sp-azure'
+              azureSubscription: 'jk-sp-azure' # Ensure this service connection is configured correctly
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 echo "Logging in to Azure..."
-                az login --service-principal -u $(sp_app_id) -p $(sp_password) --tenant $(sp_tenant)
+                az login --service-principal -u $(SP_APP_ID) -p $(SP_PASSWORD) --tenant $(SP_TENANT)
                 echo "Logging in to ACR..."
                 az acr login --name $(registryName)
 
