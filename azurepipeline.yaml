@@ -41,8 +41,3 @@ stages:
                 $(imageTag)
                 latest
             
-
-    
-
-                  --name $(containerAppName) \
-                  --resource-group $(resourceGroup)
