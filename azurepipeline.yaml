@@ -39,9 +39,11 @@ stages:
             inputs:
               command: 'buildAndPush'
               containerRegistry: 'jk-docker-connection'
-              repository: '$(containerRegistry)/$(imageName)'
+              repository: '$(imageName)'
               dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              tags: '$(imageTag)'
+              tags: 
+               - '$(imageTag)'
+               - 'latest'
             continueOnError: false
             enabled: true
   
