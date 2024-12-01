@@ -31,6 +31,7 @@ stages:
       continueOnError: false
       enabled: true
 
+stages:
 - stage: Deploy
   displayName: 'Deploy Stage'
   dependsOn: Build
@@ -39,14 +40,14 @@ stages:
     displayName: 'Deploy Job'
     steps:
     - task: AzureCLI@2
-      displayName: 'Azure Container Registry Login'
+      displayName: 'Azure Login'
       inputs:
-        azureSubscription: 'jk-sp-azure'  # Ensure this service principal has necessary permissions
+        azureSubscription: 'jk-sp-azure'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az acr login --name flaskappcontainerregistry
-
+          
     - task: AzureCLI@2
       displayName: 'Deploy to Azure Container Apps'
       inputs:
@@ -57,9 +58,9 @@ stages:
           az containerapp create \
             --name flask-app \
             --resource-group flask-microservice-rg \
-            --image flaskappcontainerregistry.azurecr.io/flask-microservice:latest \
+            --image flaskappcontainerregistry.azurecr.io/flask-microservice:$(Build.BuildId) \
             --environment flask-container-environment \
             --cpu 0.5 --memory 1Gi \
             --min-replicas 2 --max-replicas 3 \
             --ingress 'external' \
-            --target-port 8080  # Ensure your app listens on this port
+            --target-port 8080
