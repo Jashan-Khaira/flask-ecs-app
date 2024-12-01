@@ -17,7 +17,7 @@ steps:
   displayName: 'Build and Push Docker image'
   inputs:
     command: 'buildAndPush'
-    containerRegistry: 'flask-connection'
+    containerRegistry: 'flask-docker-connection'
     repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'  
     dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
     tags: |
