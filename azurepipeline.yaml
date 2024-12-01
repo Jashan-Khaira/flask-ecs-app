@@ -15,11 +15,11 @@ variables:
   - name: resourceGroup
     value: 'jashan-flask-rg'
   - name: sp_app_id
-    value: '$(sp_app_id)'
+    value: '$(SP_APP_ID)'
   - name: sp_password
-    value: '$(sp_password)'
+    value: '$(SP_PASSWORD)'
   - name: sp_tenant
-    value: '$(sp_tenant)'
+    value: '$(SP_TENANT)'
 
 pool:
   vmImage: 'ubuntu-latest'
