@@ -6,6 +6,18 @@ trigger:
 variables:
   - name: imageName
     value: 'flask-microservice'
+  - name: imageTag
+    value: '$(Build.BuildId)'
+  - name: containerRegistry
+    value: 'flaskappcontainerregistry.azurecr.io'
+  - name: registryName
+    value: 'flaskappcontainerregistry'
+  - name: resourceGroup
+    value: 'flask-microservice-rg'
+  - name: containerAppName
+    value: 'flask-app'
+  - name: containerEnvironment
+    value: 'flask-container-environment'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -24,13 +36,13 @@ stages:
             displayName: 'Build and Push Docker image'
             inputs:
               command: 'buildAndPush'
-              containerRegistry: 'jk-docker-connection'  # Ensure this connection has access to ACR
-              repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'
+              containerRegistry: 'jk-docker-connection'
+              repository: '$(containerRegistry)/$(imageName)'
               dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              tags: latest
+              tags: '$(imageTag)'
             continueOnError: false
             enabled: true
-
+  
   - stage: Deploy
     displayName: 'Deploy Stage'
     dependsOn: Build
@@ -39,14 +51,22 @@ stages:
         displayName: 'Deploy Job'
         steps:
           - task: AzureCLI@2
-            displayName: 'Azure Login'
+            displayName: 'Azure Login and ACR Authentication'
             inputs:
               azureSubscription: 'jk-sp-azure'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az acr login --name flaskappcontainerregistry
+                # Login to Azure Container Registry
+                az acr login --name $(registryName)
                 
+                # Verify image exists
+                az acr repository show-tags \
+                  --name $(registryName) \
+                  --repository $(imageName) \
+                  --query "[?=='$(imageTag)']" \
+                  --output tsv
+          
           - task: AzureCLI@2
             displayName: 'Deploy to Azure Container Apps'
             inputs:
@@ -54,12 +74,29 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az containerapp create \
-                  --name flask-app \
-                  --resource-group flask-microservice-rg \
-                  --image flaskappcontainerregistry.azurecr.io/flask-microservice:$(Build.BuildId) \
-                  --environment flask-container-environment \
-                  --cpu 0.5 --memory 1Gi \
-                  --min-replicas 2 --max-replicas 3 \
-                  --ingress 'external' \
-                  --target-port 8080
+                # Check if container app exists, update or create accordingly
+                if az containerapp show --name $(containerAppName) --resource-group $(resourceGroup) &>/dev/null; then
+                  echo "Updating existing container app..."
+                  az containerapp update \
+                    --name $(containerAppName) \
+                    --resource-group $(resourceGroup) \
+                    --image $(containerRegistry)/$(imageName):$(imageTag) \
+                    --set-env-vars PORT=8080
+                else
+                  echo "Creating new container app..."
+                  az containerapp create \
+                    --name $(containerAppName) \
+                    --resource-group $(resourceGroup) \
+                    --image $(containerRegistry)/$(imageName):$(imageTag) \
+                    --environment $(containerEnvironment) \
+                    --cpu 0.5 --memory 1Gi \
+                    --min-replicas 2 --max-replicas 3 \
+                    --ingress 'external' \
+                    --target-port 8080 \
+                    --set-env-vars PORT=8080
+                fi
+
+                # Verify deployment
+                az containerapp show \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup)
