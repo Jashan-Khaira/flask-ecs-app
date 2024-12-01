@@ -82,25 +82,46 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                # Create Container App with detailed configuration
+                # Retrieve ACR credentials
+                ACR_USERNAME=$(az acr credential show --name $(registryName) --query username -o tsv)
+                ACR_PASSWORD=$(az acr credential show --name $(registryName) --query passwords[0].value -o tsv)
+                
+                # Delete existing container app if it exists
+                az containerapp delete \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup) \
+                  --yes || true
+                
+                # Ensure container environment exists
+                az containerapp env show \
+                  --name $(containerEnvironment) \
+                  --resource-group $(resourceGroup) \
+                  || az containerapp env create \
+                  --name $(containerEnvironment) \
+                  --resource-group $(resourceGroup)
+                
+                # Create Container App with detailed configuration and debugging
                 az containerapp create \
                   --name $(containerAppName) \
                   --resource-group $(resourceGroup) \
                   --environment $(containerEnvironment) \
                   --image $(containerRegistry)/$(imageName):$(imageTag) \
                   --registry-server $(containerRegistry) \
+                  --registry-username "$ACR_USERNAME" \
+                  --registry-password "$ACR_PASSWORD" \
                   --cpu 0.5 \
                   --memory 1Gi \
                   --min-replicas 1 \
                   --max-replicas 3 \
                   --ingress external \
                   --target-port 5000 \
-                  --registry-username $(registryName) \
-                  --registry-password $(az acr credential show --name $(registryName) --query passwords[0].value -o tsv)
-                
-                # Verify and output deployment details
-                az containerapp show \
-                  --name $(containerAppName) \
-                  --resource-group $(resourceGroup) \
+                  --env-vars \
+                    ASPNETCORE_ENVIRONMENT=Production \
+                    DOTNET_RUNNING_IN_CONTAINER=true \
                   --query "{name:name, status:properties.provisioningState, url:properties.configuration.ingress.fqdn}" \
                   --output jsonc
+                
+                # Verify container app health
+                az containerapp show \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup)
