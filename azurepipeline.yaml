@@ -91,7 +91,7 @@ stages:
                     --cpu 0.5 --memory 1Gi \
                     --min-replicas 2 --max-replicas 3 \
                     --ingress 'external' \
-                    --target-port 8080
+                    --target-port 5000
                 fi
 
                 # Verify deployment
