@@ -4,7 +4,6 @@ trigger:
       - main
   
 variables: 
-  - group: flask-microservice-vars  # Recommended: Use variable groups for sensitive info
   - name: imageName
     value: 'flask-microservice'
   - name: imageTag
