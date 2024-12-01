@@ -4,6 +4,7 @@ trigger:
       - main
 
 variables:
+  - group: AzureSecrets
   - name: imageName
     value: 'flask-microservice'
 
@@ -37,7 +38,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Azure Container Registry Login'
       inputs:
-        azureSubscription: 'flask-connection'
+        azureSubscription: 'jashan-sp-azure'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
