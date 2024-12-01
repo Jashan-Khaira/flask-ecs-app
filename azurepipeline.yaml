@@ -65,10 +65,10 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                # Login to Azure Container Registry using service principal
+                # Login to Azure Container Registry
                 az acr login --name $(registryName)
                 
-                # Verify image exists and is pullable
+                # Verify image exists
                 az acr repository show-tags \
                   --name $(registryName) \
                   --repository $(imageName) \
@@ -82,26 +82,21 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                # Create ACR credentials for Container App
-                ACR_USERNAME=$(az acr credential show --name $(registryName) --query username -o tsv)
-                ACR_PASSWORD=$(az acr credential show --name $(registryName) --query passwords[0].value -o tsv)
-                
-                # Ensure container environment exists
-                az containerapp env show \
-                  --name $(containerEnvironment) \
-                  --resource-group $(resourceGroup) \
-                  || az containerapp env create \
-                  --name $(containerEnvironment) \
-                  --resource-group $(resourceGroup)
-                
-                # Deploy or update container app with explicit registry credentials
-                az containerapp update \
+                # Create Container App with detailed configuration
+                az containerapp create \
                   --name $(containerAppName) \
                   --resource-group $(resourceGroup) \
+                  --environment $(containerEnvironment) \
                   --image $(containerRegistry)/$(imageName):$(imageTag) \
                   --registry-server $(containerRegistry) \
-                  --registry-username $ACR_USERNAME \
-                  --registry-password $ACR_PASSWORD
+                  --cpu 0.5 \
+                  --memory 1Gi \
+                  --min-replicas 1 \
+                  --max-replicas 3 \
+                  --ingress external \
+                  --target-port 5000 \
+                  --registry-username $(registryName) \
+                  --registry-password $(az acr credential show --name $(registryName) --query passwords[0].value -o tsv)
                 
                 # Verify and output deployment details
                 az containerapp show \
