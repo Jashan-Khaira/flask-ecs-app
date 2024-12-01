@@ -4,6 +4,7 @@ trigger:
       - main
 
 variables:
+  - group: AzureSecrets 
   - name: imageName
     value: 'flask-microservice'
 
@@ -18,36 +19,49 @@ stages:
     steps:
     - checkout: self
       displayName: 'Checkout Code'
-
+    
     - task: Docker@2
       displayName: 'Build and Push Docker image'
       inputs:
         command: 'buildAndPush'
-        containerRegistry: 'flask-docker-connection'  # Azure service connection for ACR
+        containerRegistry: 'flask-docker-connection'
         repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'  
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        tags: latest
+        tags: 
+          - latest
 
 - stage: Deploy
   displayName: 'Deploy Stage'
   dependsOn: Build
   jobs:
   - job: Deploy
-    pool:
-      vmImage: 'ubuntu-latest'
     steps:
+    - task: AzureCLI@2
+      displayName: 'Azure Container Registry Login'
+      inputs:
+        azureSubscription: 'flask-connection'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az login --service-principal \
+            -u $(servicePrincipalId) \
+            -p $(servicePrincipalKey) \
+            --tenant $(tenantId)
+          
+          az acr login -n flaskappcontainerregistry
+
     - task: AzureCLI@2
       displayName: 'Deploy to Azure Container Apps'
       inputs:
-        azureSubscription: 'flask-connection'  # Update with your Azure service connection
+        azureSubscription: 'flask-connection'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az containerapp create \
             --name flask-app \
-            --resource-group flask-microservice-rg  # Update with your resource group
+            --resource-group flask-microservice-rg \
             --image flaskappcontainerregistry.azurecr.io/flask-microservice:latest \
-            --environment flask-container-environment  # Update with your Azure Container App environment
+            --environment flask-container-environment \
             --cpu 0.5 --memory 1Gi \
             --min-replicas 2 --max-replicas 3 \
             --ingress 'external' \
