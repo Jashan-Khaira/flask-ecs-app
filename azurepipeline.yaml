@@ -3,7 +3,9 @@ trigger:
     include:
       - main
 
-variables:
+#assign variables
+      
+variables: 
   - name: imageName
     value: 'flask-microservice'
   - name: imageTag
