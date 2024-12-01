@@ -4,7 +4,6 @@ trigger:
       - main
 
 variables:
-  - group: AzureSecrets  # Reference the Azure variable 
   - name: imageName
     value: 'flask-microservice'
 
