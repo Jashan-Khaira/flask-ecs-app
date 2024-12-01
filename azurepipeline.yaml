@@ -15,7 +15,6 @@ variables:
   - name: resourceGroup
     value: 'jashan-flask-rg'
 
-
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -29,15 +28,19 @@ stages:
           - checkout: self
             displayName: 'Checkout Repository'
             fetchDepth: 1
-          
+
+          # Step to log in to Azure Container Registry
+          - script: |
+              az acr login --name $(registryName)
+            displayName: 'Login to ACR'
+
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
               command: 'buildAndPush'
-              containerRegistry: 'jk-docker-connection'
+              containerRegistry: 'jk-docker-connection' # Ensure this service connection is configured correctly
               repository: '$(imageName)'
               dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
               tags: |
                 $(imageTag)
                 latest
-            
