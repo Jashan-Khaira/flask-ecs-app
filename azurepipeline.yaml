@@ -60,11 +60,11 @@ stages:
                 # Login to Azure Container Registry
                 az acr login --name $(registryName)
                 
-                # Verify image exists
+                # Verify image exists (corrected query)
                 az acr repository show-tags \
                   --name $(registryName) \
                   --repository $(imageName) \
-                  --query "[?=='$(imageTag)']" \
+                  --query "contains(@, '$(imageTag)')" \
                   --output tsv
           
           - task: AzureCLI@2
@@ -80,8 +80,7 @@ stages:
                   az containerapp update \
                     --name $(containerAppName) \
                     --resource-group $(resourceGroup) \
-                    --image $(containerRegistry)/$(imageName):$(imageTag) \
-                    --set-env-vars PORT=8080
+                    --image $(containerRegistry)/$(imageName):$(imageTag)
                 else
                   echo "Creating new container app..."
                   az containerapp create \
@@ -92,8 +91,7 @@ stages:
                     --cpu 0.5 --memory 1Gi \
                     --min-replicas 2 --max-replicas 3 \
                     --ingress 'external' \
-                    --target-port 8080 \
-                    --set-env-vars PORT=8080
+                    --target-port 8080
                 fi
 
                 # Verify deployment
