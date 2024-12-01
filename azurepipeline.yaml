@@ -41,7 +41,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Azure Container Registry Login'
       inputs:
-        azureSubscription: 'jk-svc-connection'  # Ensure this service principal has necessary permissions
+        azureSubscription: 'jk-sp-azure'  # Ensure this service principal has necessary permissions
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
@@ -50,7 +50,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Deploy to Azure Container Apps'
       inputs:
-        azureSubscription: 'jk-svc-connection'
+        azureSubscription: 'jk-sp-azure'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
