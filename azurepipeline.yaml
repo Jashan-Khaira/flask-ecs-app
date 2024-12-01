@@ -4,7 +4,6 @@ trigger:
       - main
 
 variables:
-  - group: AzureSecrets
   - name: imageName
     value: 'flask-microservice'
 
@@ -25,7 +24,7 @@ stages:
       displayName: 'Build and Push Docker image'
       inputs:
         command: 'buildAndPush'
-        containerRegistry: 'flask-docker-connection'  # Ensure this connection has access to ACR
+        containerRegistry: 'jk-docker-connection'  # Ensure this connection has access to ACR
         repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         tags: latest
