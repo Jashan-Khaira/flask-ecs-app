@@ -114,7 +114,7 @@ stages:
                   --min-replicas 1 \
                   --max-replicas 3 \
                   --ingress external \
-                  --target-port 5000 \
+                  --target-port 8080 \
                   --env-vars \
                     ASPNETCORE_ENVIRONMENT=Production \
                     DOTNET_RUNNING_IN_CONTAINER=true \
