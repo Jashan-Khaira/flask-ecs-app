@@ -8,6 +8,7 @@ pool:
 
 variables:
   imageName: 'flask-microservice'
+  - group: AzureSecrets  # Reference the Azure variable group
 
 steps:
 - task: Checkout@1
@@ -17,7 +18,7 @@ steps:
   displayName: 'Build and Push Docker image'
   inputs:
     command: 'buildAndPush'
-    containerRegistry: 'flask-docker-connection'
+    containerRegistry: 'flask-docker-connection'  # Azure service connection for ACR
     repository: 'flaskappcontainerregistry.azurecr.io/flask-microservice'  
     dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
     tags: |
